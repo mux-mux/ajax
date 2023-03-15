@@ -170,7 +170,7 @@ a {
   width: 100%;
 }
 .sidepanel__show {
-  display: block;
+  display: block !important;
   -webkit-animation-name: fade;
           animation-name: fade;
   -webkit-animation-duration: 1.5s;

@@ -176,13 +176,17 @@ window.addEventListener('DOMContentLoaded', () => {
   ).render();
 
   // Forms
-  const forms = document.querySelectorAll('.form');
+  const forms = document.querySelectorAll('form');
 
   const message = {
     loading: 'Loading...',
     success: 'Thanks! We will call you soon!',
     failure: 'Error happened. Try once again!',
   };
+
+  forms.forEach((item) => {
+    postData(item);
+  });
 
   function postData(form) {
     form.addEventListener('submit', (e) => {
@@ -196,15 +200,28 @@ window.addEventListener('DOMContentLoaded', () => {
       const request = new XMLHttpRequest();
       request.open('POST', 'server.php');
 
-      request.setRequsetHeader('Content-type', 'multipart/form-data');
+      request.setRequestHeader('Content-type', 'application/json');
+      // request.setRequestHeader('Content-type', 'multipart/form-data'); XMLHttpRequest and <- this setHeader cause array(0) response
       const formData = new FormData(form); //form input[name] must have
 
-      request.send(formData);
+      const object = {};
+      formData.forEach(function (value, key) {
+        object[key] = value;
+      });
+
+      const json = JSON.stringify(object);
+
+      request.send(json);
 
       request.addEventListener('load', () => {
         if (request.status === 200) {
           console.log(request.response);
           statusMessage.textContent = message.success;
+          form.reset();
+          setTimeout(() => {
+            modal.classList.add('sidepanel__hide');
+            modal.classList.remove('sidepanel__show');
+          }, 2000);
         } else {
           statusMessage.textContent = message.failure;
         }
