@@ -90,18 +90,34 @@ window.addEventListener('DOMContentLoaded', () => {
   setClock('.timer', deadline);
 
   //Modal
-  const modalTrigger = document.querySelector('[data-modal]'),
-    modal = document.querySelector('.modal'),
-    modalCloseBtn = document.querySelector('[data-close]');
+  const modalTrigger = document.querySelectorAll('[data-modal]'),
+    modal = document.querySelector('.modal');
 
-  modalTrigger.addEventListener('click', () => {
-    modal.classList.add('sidepanel__show');
-    modal.classList.remove('sidepanel__hide');
+  modalTrigger.forEach((btn) => {
+    btn.addEventListener('click', openModal);
   });
 
-  modalCloseBtn.addEventListener('click', () => {
+  function closeModal() {
     modal.classList.add('sidepanel__hide');
     modal.classList.remove('sidepanel__show');
+    document.body.style.overflow = '';
+  }
+  function openModal() {
+    modal.classList.add('sidepanel__show');
+    modal.classList.remove('sidepanel__hide');
+    document.body.style.overflow = 'hidden';
+  }
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal || e.target.getAttribute('data-close') == '') {
+      closeModal();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Escape' && modal.classList.contains('show')) {
+      closeModal();
+    }
   });
 
   //Class for Cards
@@ -179,9 +195,12 @@ window.addEventListener('DOMContentLoaded', () => {
   const forms = document.querySelectorAll('form');
 
   const message = {
-    loading: 'Loading...',
+    loading: 'icons/spinner.svg',
     success: 'Thanks! We will call you soon!',
     failure: 'Error happened. Try once again!',
+    remove: function () {
+      console.log('a');
+    },
   };
 
   forms.forEach((item) => {
@@ -193,9 +212,13 @@ window.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
 
       const statusMessage = document.createElement('div');
-      statusMessage.classList.add('status');
-      statusMessage.textContent = message.loading;
-      form.append(statusMessage);
+      statusMessage.src = message.loading;
+      statusMessage.style.cssText = `
+        display: block;
+        margin: 0 auto;
+      `;
+      // form.append(statusMessage);
+      form.insertAdjacentElement('afterend', statusMessage);
 
       const request = new XMLHttpRequest();
       request.open('POST', 'server.php');
@@ -216,17 +239,40 @@ window.addEventListener('DOMContentLoaded', () => {
       request.addEventListener('load', () => {
         if (request.status === 200) {
           console.log(request.response);
-          statusMessage.textContent = message.success;
+          showThanksModal(message.success);
           form.reset();
-          setTimeout(() => {
-            modal.classList.add('sidepanel__hide');
-            modal.classList.remove('sidepanel__show');
-          }, 2000);
+          message.remove();
         } else {
-          statusMessage.textContent = message.failure;
+          showThanksModal(message.failure);
         }
       });
     });
   }
-  //START 14m
+
+  //SHOW THANKS
+
+  function showThanksModal(msg) {
+    const prevModalDialog = document.querySelector('.modal__dialog');
+
+    prevModalDialog.classList.add('sidepanel__hide');
+    openModal();
+
+    const thankModal = document.createElement('div');
+    thankModal.classList.add('modal__dialog');
+    thankModal.innerHTML = `
+    <div class="modal__content">
+      <div class="modal__close" data-close>x</div>
+      <div class="modal__title">${msg}</div>
+    </div>
+    `;
+
+    document.querySelector('.modal').append(thankModal);
+
+    setTimeout(() => {
+      thankModal.remove();
+      prevModalDialog.classList.add('sidepanel__show');
+      prevModalDialog.classList.remove('sidepanel__hide');
+      closeModal();
+    }, 4000);
+  }
 });
